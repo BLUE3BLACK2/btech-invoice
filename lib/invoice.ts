@@ -21,8 +21,14 @@ export type Invoice = {
   items: LineItem[];
   taxRate: number;
   notes: string;
+  terms: string;
+  signature: string;
+  signatory: string;
   createdAt: string;
 };
+
+type StoredInvoice = Omit<Invoice, "terms" | "signature" | "signatory"> &
+  Partial<Pick<Invoice, "terms" | "signature" | "signatory">>;
 
 export type InvoiceTotals = {
   subtotal: number;
@@ -40,6 +46,13 @@ export const DEFAULT_NOTES = [
   `Beneficiary Name: ${DEFAULT_COMPANY_NAME}`,
   "Account Number: ",
   "Bank Name: Bank Mandiri",
+].join("\n");
+export const DEFAULT_TERMS = [
+  "1. Payment is due on or before the due date stated above.",
+  "2. Payment is considered complete once funds are fully received in the listed account. Please send proof of transfer.",
+  "3. Any bank transfer fees are borne by the payer.",
+  "4. Late payment may result in service suspension until payment is received.",
+  "5. All payments received are non-refundable.",
 ].join("\n");
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -121,8 +134,20 @@ export function createLineItem(): LineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0 };
 }
 
+export function withInvoiceDefaults(invoice: StoredInvoice): Invoice {
+  return { terms: "", signature: "", signatory: "", ...invoice };
+}
+
+function latestInvoice(invoices: Invoice[]) {
+  return invoices.reduce<Invoice | null>(
+    (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
+    null,
+  );
+}
+
 export function createInvoice(invoices: Invoice[]): Invoice {
   const today = toIsoDate(new Date());
+  const latest = latestInvoice(invoices);
   return {
     id: crypto.randomUUID(),
     number: nextInvoiceNumber(invoices),
@@ -135,6 +160,9 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     items: [createLineItem()],
     taxRate: 0,
     notes: DEFAULT_NOTES,
+    terms: DEFAULT_TERMS,
+    signature: latest?.signature ?? "",
+    signatory: latest?.signatory ?? "",
     createdAt: new Date().toISOString(),
   };
 }

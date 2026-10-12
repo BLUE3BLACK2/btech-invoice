@@ -15,12 +15,13 @@ async function toPdfImage(src: string) {
 }
 
 export async function renderInvoicePdf(invoice: Invoice) {
-  const [{ pdf }, { InvoiceDocument }, logo] = await Promise.all([
+  const [{ pdf }, { InvoiceDocument }, logo, signature] = await Promise.all([
     import("@react-pdf/renderer"),
     import("@/components/invoice/invoice-document"),
     toPdfImage(invoice.logo),
+    invoice.signature ? toPdfImage(invoice.signature) : "",
   ]);
-  return pdf(<InvoiceDocument invoice={invoice} logo={logo} />).toBlob();
+  return pdf(<InvoiceDocument invoice={invoice} logo={logo} signature={signature} />).toBlob();
 }
 
 export function downloadInvoicePdf(invoice: Invoice, blob: Blob) {
