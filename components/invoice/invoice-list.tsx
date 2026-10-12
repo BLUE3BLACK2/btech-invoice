@@ -40,7 +40,7 @@ export function InvoiceList() {
   }
 
   return (
-    <Card className="overflow-x-auto">
+    <Card className="relative overflow-x-auto">
       <table className="w-full min-w-[640px] text-left text-sm">
         <thead>
           <tr className="border-b border-border text-xs tracking-wide text-muted uppercase">
