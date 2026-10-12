@@ -9,19 +9,20 @@ import {
   CURRENCIES,
   calculateTotals,
   createInvoice,
+  DEFAULT_LOGO,
   type Currency,
   type Invoice,
 } from "@/lib/invoice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
+import { ImagePicker } from "@/components/ui/image-picker";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
-import { LogoPicker } from "./logo-picker";
 
 type InvoiceErrors = Partial<Record<"number" | "billTo" | "form", string>>;
 
@@ -84,7 +85,13 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
       <Card className="flex flex-col gap-10 p-6 sm:p-10">
         <div className="flex flex-col-reverse gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <LogoPicker value={invoice.logo} onChange={(logo) => update("logo", logo)} />
+          <ImagePicker
+            value={invoice.logo}
+            onChange={(logo) => update("logo", logo)}
+            alt="Logo perusahaan"
+            pickLabel="Ganti Logo"
+            resetValue={DEFAULT_LOGO}
+          />
           <div className="flex flex-col gap-3 sm:items-end">
             <h2 className="text-4xl font-bold tracking-tight">INVOICE</h2>
             <Field
