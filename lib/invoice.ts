@@ -36,6 +36,7 @@ export const DEFAULT_LOGO = "/images/btech-logo-purple.webp";
 export const DEFAULT_COMPANY_NAME = "PT SKALA INDONESIA GLOBAL";
 export const DEFAULT_CURRENCY: Currency = "IDR";
 export const DEFAULT_DUE_DAYS = 14;
+export const DEFAULT_NOTES = process.env.NEXT_PUBLIC_DEFAULT_NOTES ?? "";
 export const NOTES_PLACEHOLDER = [
   "Payment via Mandiri:",
   "Beneficiary Name: ",
@@ -115,7 +116,7 @@ function latestNotes(invoices: Invoice[]) {
     (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
     null,
   );
-  return latest?.notes ?? "";
+  return latest?.notes ?? DEFAULT_NOTES;
 }
 
 export function createInvoice(invoices: Invoice[]): Invoice {

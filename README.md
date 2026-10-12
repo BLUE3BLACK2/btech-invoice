@@ -2,7 +2,19 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Description |
+| --- | --- |
+| `NEXT_PUBLIC_DEFAULT_NOTES` | Default notes for the first invoice, such as payment details. Use `\n` for line breaks. New invoices after that reuse the notes of the latest saved invoice. |
+
+`.env.local` is ignored by git, so payment details never end up in the repository. Set the same variable in your hosting provider when deploying.
+
+Then, run the development server:
 
 ```bash
 npm run dev
