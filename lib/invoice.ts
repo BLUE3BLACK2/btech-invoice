@@ -30,6 +30,8 @@ export type Invoice = {
 type StoredInvoice = Omit<Invoice, "terms" | "signature" | "signatory"> &
   Partial<Pick<Invoice, "terms" | "signature" | "signatory">>;
 
+export type InvoiceDefaults = Pick<Invoice, "notes" | "signature" | "signatory">;
+
 export type InvoiceTotals = {
   subtotal: number;
   tax: number;
@@ -42,9 +44,6 @@ export const DEFAULT_LOGO = "/images/btech-logo-purple.webp";
 export const DEFAULT_COMPANY_NAME = "PT SKALA INDONESIA GLOBAL";
 export const DEFAULT_CURRENCY: Currency = "IDR";
 export const DEFAULT_DUE_DAYS = 14;
-export const DEFAULT_NOTES = process.env.NEXT_PUBLIC_DEFAULT_NOTES ?? "";
-export const DEFAULT_SIGNATURE = process.env.NEXT_PUBLIC_DEFAULT_SIGNATURE ?? "";
-export const DEFAULT_SIGNATORY = process.env.NEXT_PUBLIC_DEFAULT_SIGNATORY ?? "";
 export const NOTES_PLACEHOLDER = [
   "Payment via Mandiri:",
   "Beneficiary Name: ",
@@ -149,7 +148,7 @@ function latestInvoice(invoices: Invoice[]) {
   );
 }
 
-export function createInvoice(invoices: Invoice[]): Invoice {
+export function createInvoice(invoices: Invoice[], defaults: InvoiceDefaults): Invoice {
   const today = toIsoDate(new Date());
   const latest = latestInvoice(invoices);
   return {
@@ -163,10 +162,10 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     currency: DEFAULT_CURRENCY,
     items: [createLineItem()],
     taxRate: 0,
-    notes: DEFAULT_NOTES || latest?.notes || "",
+    notes: defaults.notes || latest?.notes || "",
     terms: DEFAULT_TERMS,
-    signature: DEFAULT_SIGNATURE || latest?.signature || "",
-    signatory: DEFAULT_SIGNATORY || latest?.signatory || "",
+    signature: defaults.signature || latest?.signature || "",
+    signatory: defaults.signatory || latest?.signatory || "",
     createdAt: new Date().toISOString(),
   };
 }
