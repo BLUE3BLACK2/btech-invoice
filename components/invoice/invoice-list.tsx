@@ -1,12 +1,12 @@
 "use client";
 
-import { Download, FileText, LoaderCircle, Trash } from "lucide-react";
+import { Download, FileText, LoaderCircle, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import { calculateTotals, formatCurrency, formatDate } from "@/lib/invoice";
-import { Button } from "@/components/ui/button";
+import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCard } from "@/components/ui/status-card";
@@ -54,7 +54,7 @@ export function InvoiceList() {
                   {column}
                 </th>
               ))}
-              <th scope="col" className="w-28 px-6 py-4">
+              <th scope="col" className="w-36 px-6 py-4">
                 <span className="sr-only">Aksi</span>
               </th>
             </tr>
@@ -95,6 +95,14 @@ export function InvoiceList() {
                         <Download className="size-4" />
                       )}
                     </Button>
+                    <ButtonLink
+                      href={`/invoices/${invoice.id}/edit`}
+                      variant="ghost"
+                      size="icon"
+                      aria-label={`Edit invoice ${invoice.number}`}
+                    >
+                      <Pencil className="size-4" />
+                    </ButtonLink>
                     <Button
                       variant="danger"
                       size="icon"
