@@ -19,8 +19,8 @@ export function SummaryRow({ label, emphasis, children }: SummaryRowProps) {
         emphasis === "balance" && "text-lg font-bold",
       )}
     >
-      <dt className={emphasis ? "text-ink" : "text-muted"}>{label}</dt>
-      <dd className="tabular-nums">{children}</dd>
+      <dt className={cn("shrink-0", emphasis ? "text-ink" : "text-muted")}>{label}</dt>
+      <dd className="text-right tabular-nums">{children}</dd>
     </div>
   );
 }
