@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import type { Invoice } from "@/lib/invoice";
 import { downloadInvoicePdf, renderInvoicePdf } from "@/lib/invoice-pdf";
 
-type InvoicePdf = { invoice: Invoice } & ({ blob: Blob; url: string } | { failed: true });
+type InvoicePdf = { invoice: Invoice } & ({ blob: Blob } | { failed: true });
 
 export function useInvoicePdf(invoice: Invoice | undefined) {
   const [pdf, setPdf] = useState<InvoicePdf | null>(null);
@@ -12,19 +12,15 @@ export function useInvoicePdf(invoice: Invoice | undefined) {
   useEffect(() => {
     if (!invoice) return;
     let active = true;
-    let url = "";
     renderInvoicePdf(invoice)
       .then((blob) => {
-        if (!active) return;
-        url = URL.createObjectURL(blob);
-        setPdf({ invoice, blob, url });
+        if (active) setPdf({ invoice, blob });
       })
       .catch(() => {
         if (active) setPdf({ invoice, failed: true });
       });
     return () => {
       active = false;
-      if (url) URL.revokeObjectURL(url);
     };
   }, [invoice]);
 

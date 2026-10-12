@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileX, LoaderCircle } from "lucide-react";
+import { Download, FileX } from "lucide-react";
 import { useInvoicePdf } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import {
@@ -17,8 +17,7 @@ import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCard } from "@/components/ui/status-card";
 import { SummaryRow } from "./invoice-summary";
-
-const PDF_VIEWER_PARAMS = "#toolbar=0&navpanes=0&view=FitH";
+import { PdfPages } from "./pdf-pages";
 
 function InvoicePdfPreview({ invoice }: { invoice: Invoice }) {
   const pdf = useInvoicePdf(invoice);
@@ -32,25 +31,12 @@ function InvoicePdfPreview({ invoice }: { invoice: Invoice }) {
         description={`Ditagihkan ke ${invoice.billTo}`}
       />
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
-        <Card className="aspect-[612/792] overflow-hidden">
-          {ready ? (
-            <iframe
-              src={`${ready.url}${PDF_VIEWER_PARAMS}`}
-              title={invoiceTitle(invoice)}
-              className="size-full"
-            />
-          ) : (
-            <div className="flex size-full flex-col items-center justify-center gap-3 p-6 text-center text-sm text-muted">
-              {pdf ? (
-                "PDF gagal dibuat. Muat ulang halaman untuk mencoba lagi."
-              ) : (
-                <>
-                  <LoaderCircle className="size-6 animate-spin text-primary" />
-                  Menyiapkan PDF...
-                </>
-              )}
-            </div>
-          )}
+        <Card className="overflow-hidden">
+          <PdfPages
+            blob={ready?.blob ?? null}
+            failed={Boolean(pdf) && !ready}
+            label={`Preview ${invoiceTitle(invoice)}`}
+          />
         </Card>
 
         <aside className="order-first flex flex-col gap-6 lg:sticky lg:top-6 lg:order-none">
