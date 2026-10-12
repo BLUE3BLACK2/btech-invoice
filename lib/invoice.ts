@@ -36,10 +36,11 @@ export const DEFAULT_LOGO = "/images/btech-logo-purple.webp";
 export const DEFAULT_COMPANY_NAME = "PT SKALA INDONESIA GLOBAL";
 export const DEFAULT_CURRENCY: Currency = "IDR";
 export const DEFAULT_DUE_DAYS = 14;
-export const DEFAULT_NOTES = [
-  `Beneficiary Name: ${DEFAULT_COMPANY_NAME}`,
+export const NOTES_PLACEHOLDER = [
+  "Payment via Mandiri:",
+  "Beneficiary Name: ",
   "Account Number: ",
-  "Bank Name: Bank Mandiri",
+  "Bank Name: ",
 ].join("\n");
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -109,6 +110,14 @@ export function createLineItem(): LineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0 };
 }
 
+function latestNotes(invoices: Invoice[]) {
+  const latest = invoices.reduce<Invoice | null>(
+    (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
+    null,
+  );
+  return latest?.notes ?? "";
+}
+
 export function createInvoice(invoices: Invoice[]): Invoice {
   const today = toIsoDate(new Date());
   return {
@@ -122,7 +131,7 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     currency: DEFAULT_CURRENCY,
     items: [createLineItem()],
     taxRate: 0,
-    notes: DEFAULT_NOTES,
+    notes: latestNotes(invoices),
     createdAt: new Date().toISOString(),
   };
 }
