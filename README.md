@@ -10,13 +10,18 @@ cp .env.example .env.local
 
 | Variable | Description |
 | --- | --- |
-| `NEXT_PUBLIC_DEFAULT_NOTES` | Default notes for new invoices, such as payment details. Use `\n` for line breaks. |
-| `NEXT_PUBLIC_DEFAULT_SIGNATURE` | Default signature image for new invoices, as a `data:image/webp;base64,...` URL. Use a transparent image cropped to the signature. |
-| `NEXT_PUBLIC_DEFAULT_SIGNATORY` | Default signatory name printed under the signature. |
+| `AUTH_USERNAME` | Username for the login page. |
+| `AUTH_PASSWORD` | Password for the login page. Use a strong password. |
+| `AUTH_SECRET` | Random string of at least 32 characters used to sign the session cookie, for example from `openssl rand -base64 48`. Changing it signs everyone out. |
+| `INVOICE_DEFAULT_NOTES` | Default notes for new invoices, such as payment details. Use `\n` for line breaks. |
+| `INVOICE_DEFAULT_SIGNATURE` | Default signature image for new invoices, as a `data:image/webp;base64,...` URL. Use a transparent image cropped to the signature. |
+| `INVOICE_DEFAULT_SIGNATORY` | Default signatory name printed under the signature. |
 
-When a variable is empty, new invoices reuse the value from the latest saved invoice.
+Every page requires login. The app stays locked until `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` are set.
 
-`.env.local` is ignored by git, so payment details never end up in the repository. Set the same variable in your hosting provider when deploying.
+The invoice defaults are read on the server and sent only to signed-in users, so they never end up in the public JavaScript bundle. When a default is empty, new invoices reuse the value from the latest saved invoice.
+
+`.env.local` is ignored by git, so credentials and payment details never end up in the repository. Set the same variables in your hosting provider when deploying.
 
 Then, run the development server:
 

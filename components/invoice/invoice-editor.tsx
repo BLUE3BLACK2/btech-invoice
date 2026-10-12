@@ -13,6 +13,7 @@ import {
   NOTES_PLACEHOLDER,
   type Currency,
   type Invoice,
+  type InvoiceDefaults,
 } from "@/lib/invoice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -31,12 +32,13 @@ const currencyOptions = CURRENCIES.map((currency) => ({ value: currency, label: 
 
 type InvoiceFormProps = {
   invoices: Invoice[];
+  defaults: InvoiceDefaults;
   saveInvoice: (invoice: Invoice) => boolean;
 };
 
-function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
+function InvoiceForm({ invoices, defaults, saveInvoice }: InvoiceFormProps) {
   const router = useRouter();
-  const [invoice, setInvoice] = useState(() => createInvoice(invoices));
+  const [invoice, setInvoice] = useState(() => createInvoice(invoices, defaults));
   const [errors, setErrors] = useState<InvoiceErrors>({});
   const { download, pendingId, failed } = useInvoicePdfDownload();
   const totals = calculateTotals(invoice);
@@ -73,7 +75,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
       setErrors({ form: "Invoice gagal disimpan. Periksa ruang penyimpanan browser." });
       return;
     }
-    setInvoice(createInvoice([...invoices, saved]));
+    setInvoice(createInvoice([...invoices, saved], defaults));
     router.push("/");
   }
 
@@ -239,12 +241,12 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
   );
 }
 
-export function InvoiceEditor() {
+export function InvoiceEditor({ defaults }: { defaults: InvoiceDefaults }) {
   const { invoices, saveInvoice } = useInvoices();
 
   if (!invoices) {
     return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
-  return <InvoiceForm invoices={invoices} saveInvoice={saveInvoice} />;
+  return <InvoiceForm invoices={invoices} defaults={defaults} saveInvoice={saveInvoice} />;
 }
