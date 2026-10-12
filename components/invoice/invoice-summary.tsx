@@ -9,7 +9,7 @@ type SummaryRowProps = {
   children: ReactNode;
 };
 
-function SummaryRow({ label, emphasis, children }: SummaryRowProps) {
+export function SummaryRow({ label, emphasis, children }: SummaryRowProps) {
   return (
     <div
       className={cn(
