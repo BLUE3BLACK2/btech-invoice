@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
@@ -190,7 +191,7 @@ export function InvoiceEditor() {
   const { invoices, saveInvoice } = useInvoices();
 
   if (!invoices) {
-    return <Card className="p-10 text-center text-sm text-muted">Menyiapkan invoice...</Card>;
+    return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
   return <InvoiceForm invoices={invoices} saveInvoice={saveInvoice} />;

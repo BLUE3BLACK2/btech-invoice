@@ -5,6 +5,8 @@ import { useInvoices } from "@/hooks/use-invoices";
 import { calculateTotals, formatCurrency, formatDate } from "@/lib/invoice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
+import { StatusCard } from "@/components/ui/status-card";
 
 const columns = ["Nomor", "Bill To", "Tanggal", "Total"];
 
@@ -12,22 +14,16 @@ export function InvoiceList() {
   const { invoices, deleteInvoice } = useInvoices();
 
   if (!invoices) {
-    return <Card className="p-10 text-center text-sm text-muted">Memuat invoice...</Card>;
+    return <StatusCard>Memuat invoice...</StatusCard>;
   }
 
   if (invoices.length === 0) {
     return (
-      <Card className="flex flex-col items-center gap-4 px-6 py-16 text-center">
-        <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">
-          <FileText className="size-6" />
-        </span>
-        <div className="flex flex-col gap-1">
-          <h2 className="text-lg font-semibold">Belum ada invoice</h2>
-          <p className="text-sm text-muted">
-            Klik Tambah Invoice untuk membuat invoice pertama.
-          </p>
-        </div>
-      </Card>
+      <EmptyState
+        icon={FileText}
+        title="Belum ada invoice"
+        description="Klik Tambah Invoice untuk membuat invoice pertama."
+      />
     );
   }
 
