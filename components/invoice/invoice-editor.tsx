@@ -23,6 +23,7 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
+import { InvoiceNotFound } from "./invoice-not-found";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
 
@@ -32,13 +33,20 @@ const currencyOptions = CURRENCIES.map((currency) => ({ value: currency, label: 
 
 type InvoiceFormProps = {
   invoices: Invoice[];
-  defaults: InvoiceDefaults;
+  initialInvoice: () => Invoice;
+  saveLabel: string;
   saveInvoice: (invoice: Invoice) => boolean;
+  onSaved: (invoice: Invoice) => void;
 };
 
-function InvoiceForm({ invoices, defaults, saveInvoice }: InvoiceFormProps) {
-  const router = useRouter();
-  const [invoice, setInvoice] = useState(() => createInvoice(invoices, defaults));
+function InvoiceForm({
+  invoices,
+  initialInvoice,
+  saveLabel,
+  saveInvoice,
+  onSaved,
+}: InvoiceFormProps) {
+  const [invoice, setInvoice] = useState(initialInvoice);
   const [errors, setErrors] = useState<InvoiceErrors>({});
   const { download, pendingId, failed } = useInvoicePdfDownload();
   const totals = calculateTotals(invoice);
@@ -75,8 +83,7 @@ function InvoiceForm({ invoices, defaults, saveInvoice }: InvoiceFormProps) {
       setErrors({ form: "Invoice gagal disimpan. Periksa ruang penyimpanan browser." });
       return;
     }
-    setInvoice(createInvoice([...invoices, saved], defaults));
-    router.push("/");
+    onSaved(saved);
   }
 
   function handleDownload() {
@@ -216,7 +223,7 @@ function InvoiceForm({ invoices, defaults, saveInvoice }: InvoiceFormProps) {
       <aside className="order-first flex flex-col gap-3 lg:sticky lg:top-6 lg:order-none">
         <Button block onClick={handleSave}>
           <Save className="size-4" />
-          Simpan Invoice
+          {saveLabel}
         </Button>
         {errors.form && <p className="text-xs text-danger">{errors.form}</p>}
         <Button block variant="secondary" disabled={pendingId !== null} onClick={handleDownload}>
@@ -242,11 +249,51 @@ function InvoiceForm({ invoices, defaults, saveInvoice }: InvoiceFormProps) {
 }
 
 export function InvoiceEditor({ defaults }: { defaults: InvoiceDefaults }) {
+  const router = useRouter();
   const { invoices, saveInvoice } = useInvoices();
+  const [formKey, setFormKey] = useState(0);
 
   if (!invoices) {
     return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
-  return <InvoiceForm invoices={invoices} defaults={defaults} saveInvoice={saveInvoice} />;
+  return (
+    <InvoiceForm
+      key={formKey}
+      invoices={invoices}
+      initialInvoice={() => createInvoice(invoices, defaults)}
+      saveLabel="Simpan Invoice"
+      saveInvoice={saveInvoice}
+      onSaved={() => {
+        setFormKey((key) => key + 1);
+        router.push("/");
+      }}
+    />
+  );
+}
+
+export function EditInvoiceEditor({ id }: { id: string }) {
+  const router = useRouter();
+  const { invoices, saveInvoice } = useInvoices();
+
+  if (!invoices) {
+    return <StatusCard>Memuat invoice...</StatusCard>;
+  }
+
+  const invoice = invoices.find((item) => item.id === id);
+
+  if (!invoice) {
+    return <InvoiceNotFound />;
+  }
+
+  return (
+    <InvoiceForm
+      key={invoice.id}
+      invoices={invoices}
+      initialInvoice={() => invoice}
+      saveLabel="Simpan Perubahan"
+      saveInvoice={saveInvoice}
+      onSaved={(saved) => router.push(`/invoices/${saved.id}`)}
+    />
+  );
 }

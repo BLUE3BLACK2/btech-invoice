@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, FileX } from "lucide-react";
+import { Download, Pencil } from "lucide-react";
 import { useInvoicePdf } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import {
@@ -14,8 +14,8 @@ import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { PageHeading } from "@/components/page-heading";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCard } from "@/components/ui/status-card";
+import { InvoiceNotFound } from "./invoice-not-found";
 import { SummaryRow } from "./invoice-summary";
 import { PdfPages } from "./pdf-pages";
 
@@ -40,14 +40,20 @@ function InvoicePdfPreview({ invoice }: { invoice: Invoice }) {
         </Card>
 
         <aside className="order-first flex flex-col gap-6 lg:sticky lg:top-6 lg:order-none">
-          <Button
-            block
-            disabled={!ready}
-            onClick={() => ready && downloadInvoicePdf(invoice, ready.blob)}
-          >
-            <Download className="size-4" />
-            Download PDF
-          </Button>
+          <div className="flex flex-col gap-3">
+            <Button
+              block
+              disabled={!ready}
+              onClick={() => ready && downloadInvoicePdf(invoice, ready.blob)}
+            >
+              <Download className="size-4" />
+              Download PDF
+            </Button>
+            <ButtonLink href={`/invoices/${invoice.id}/edit`} variant="secondary" block>
+              <Pencil className="size-4" />
+              Edit Invoice
+            </ButtonLink>
+          </div>
           <Card className="p-6">
             <dl className="flex flex-col gap-4 text-sm">
               <SummaryRow label="Bill To">{invoice.billTo}</SummaryRow>
@@ -74,14 +80,7 @@ export function InvoicePreview({ id }: { id: string }) {
   const invoice = invoices.find((item) => item.id === id);
 
   if (!invoice) {
-    return (
-      <EmptyState
-        icon={FileX}
-        title="Invoice tidak ditemukan"
-        description="Invoice mungkin sudah dihapus atau disimpan di browser lain."
-        action={<ButtonLink href="/">Lihat daftar invoice</ButtonLink>}
-      />
-    );
+    return <InvoiceNotFound />;
   }
 
   return <InvoicePdfPreview invoice={invoice} />;

@@ -2,6 +2,11 @@
 
 Semua perubahan penting pada proyek ini dicatat di file ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan versi mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.3.0] - 2026-10-12
+
+### Added
+- Edit invoice yang sudah disimpan lewat halaman `/invoices/[id]/edit`, dengan tombol edit di daftar invoice dan di halaman preview (#14).
+
 ## [0.2.1] - 2026-10-12
 
 ### Fixed
