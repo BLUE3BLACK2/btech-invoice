@@ -1,11 +1,12 @@
 "use client";
 
-import { Download, Eye, FileText, LoaderCircle, Trash } from "lucide-react";
+import { Download, FileText, LoaderCircle, Trash } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import { calculateTotals, formatCurrency, formatDate } from "@/lib/invoice";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { StatusCard } from "@/components/ui/status-card";
@@ -53,7 +54,7 @@ export function InvoiceList() {
                   {column}
                 </th>
               ))}
-              <th scope="col" className="w-36 px-6 py-4">
+              <th scope="col" className="w-28 px-6 py-4">
                 <span className="sr-only">Aksi</span>
               </th>
             </tr>
@@ -65,7 +66,15 @@ export function InvoiceList() {
                 className="cursor-pointer border-b border-border last:border-0 hover:bg-canvas"
                 onClick={() => router.push(`/invoices/${invoice.id}`)}
               >
-                <td className="px-6 py-4 font-semibold text-primary">{invoice.number}</td>
+                <td className="px-6 py-4 font-semibold text-primary">
+                  <Link
+                    href={`/invoices/${invoice.id}`}
+                    className="rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    {invoice.number}
+                  </Link>
+                </td>
                 <td className="px-6 py-4 font-medium">{invoice.billTo}</td>
                 <td className="px-6 py-4 text-muted">{formatDate(invoice.date)}</td>
                 <td className="px-6 py-4 text-right font-medium tabular-nums">
@@ -73,14 +82,6 @@ export function InvoiceList() {
                 </td>
                 <td className="px-4 py-2" onClick={(event) => event.stopPropagation()}>
                   <div className="flex justify-end gap-1">
-                    <ButtonLink
-                      href={`/invoices/${invoice.id}`}
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Lihat invoice ${invoice.number}`}
-                    >
-                      <Eye className="size-4" />
-                    </ButtonLink>
                     <Button
                       variant="ghost"
                       size="icon"
