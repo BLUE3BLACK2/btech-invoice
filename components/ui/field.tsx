@@ -6,11 +6,12 @@ type FieldProps = {
   htmlFor?: string;
   error?: string;
   inline?: boolean;
+  hideLabel?: boolean;
   className?: string;
   children: ReactNode;
 };
 
-export function Field({ label, htmlFor, error, inline, className, children }: FieldProps) {
+export function Field({ label, htmlFor, error, inline, hideLabel, className, children }: FieldProps) {
   return (
     <div
       className={cn(
@@ -18,7 +19,7 @@ export function Field({ label, htmlFor, error, inline, className, children }: Fi
         className,
       )}
     >
-      <label htmlFor={htmlFor} className="text-sm font-medium text-muted">
+      <label htmlFor={htmlFor} className={hideLabel ? "sr-only" : "text-sm font-medium text-muted"}>
         {label}
       </label>
       {children}

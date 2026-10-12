@@ -76,6 +76,11 @@ export function addDays(isoDate: string, days: number) {
   return toIsoDate(date);
 }
 
+export function parseAmount(value: string) {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+}
+
 export function lineItemAmount(item: LineItem) {
   return item.quantity * item.rate;
 }
