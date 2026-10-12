@@ -63,6 +63,18 @@ export function formatDate(isoDate: string) {
   return dateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
 }
 
+export function formatQuantity(quantity: number) {
+  return quantity.toLocaleString("en-US");
+}
+
+export function invoiceTitle(invoice: Pick<Invoice, "number">) {
+  return `Invoice ${invoice.number}`;
+}
+
+export function invoiceFileName(invoice: Pick<Invoice, "number">) {
+  return `${invoiceTitle(invoice)}.pdf`;
+}
+
 export function toIsoDate(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
