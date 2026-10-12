@@ -182,7 +182,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
           <Field label="Terms" htmlFor="terms">
             <Textarea
               id="terms"
-              rows={5}
+              rows={8}
               placeholder="Terms and conditions"
               value={invoice.terms}
               onChange={(event) => update("terms", event.target.value)}
