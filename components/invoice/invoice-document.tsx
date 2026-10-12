@@ -173,12 +173,45 @@ const styles = StyleSheet.create({
     paddingRight: CELL_PADDING,
     textAlign: "right",
   },
-  notes: {
+  footer: {
+    flexDirection: "row",
     marginTop: 39,
-    paddingHorizontal: 48,
+    paddingLeft: 48,
+    paddingRight: 44.25,
   },
-  notesBody: {
+  notes: {
+    flex: 1,
+    paddingRight: 24,
+  },
+  noteBody: {
     marginTop: 3,
+  },
+  signature: {
+    width: 180,
+    alignItems: "center",
+    textAlign: "center",
+  },
+  signatureImage: {
+    height: 54,
+    maxWidth: 180,
+    objectFit: "contain",
+  },
+  signatureSpace: {
+    height: 54,
+  },
+  signatureLine: {
+    alignSelf: "stretch",
+    marginTop: 6,
+    borderTopWidth: 0.75,
+    borderTopColor: colors.text,
+  },
+  signatory: {
+    marginTop: 4.5,
+    fontFamily: fonts.bold,
+  },
+  terms: {
+    marginTop: 22.5,
+    paddingHorizontal: 48,
   },
 });
 
@@ -207,12 +240,27 @@ function AmountRow({ label, value, valueWidth, highlight }: AmountRowProps) {
   );
 }
 
+type NoteBlockProps = {
+  label: string;
+  children: string;
+};
+
+function NoteBlock({ label, children }: NoteBlockProps) {
+  return (
+    <View wrap={false}>
+      <Text style={styles.label}>{label}</Text>
+      <Text style={styles.noteBody}>{children}</Text>
+    </View>
+  );
+}
+
 type InvoiceDocumentProps = {
   invoice: Invoice;
   logo: string;
+  signature: string;
 };
 
-export function InvoiceDocument({ invoice, logo }: InvoiceDocumentProps) {
+export function InvoiceDocument({ invoice, logo, signature }: InvoiceDocumentProps) {
   const totals = calculateTotals(invoice);
   const money = (amount: number) => formatCurrency(amount, invoice.currency);
   const rows = invoice.items.map((item) => ({
@@ -307,10 +355,25 @@ export function InvoiceDocument({ invoice, logo }: InvoiceDocumentProps) {
           <AmountRow label="Total:" value={amounts.total} valueWidth={valueWidth} />
         </View>
 
-        {invoice.notes.trim() && (
-          <View style={styles.notes} wrap={false}>
-            <Text style={styles.label}>Notes:</Text>
-            <Text style={styles.notesBody}>{invoice.notes}</Text>
+        <View style={styles.footer} wrap={false}>
+          <View style={styles.notes}>
+            {invoice.notes.trim() && <NoteBlock label="Notes:">{invoice.notes}</NoteBlock>}
+          </View>
+          <View style={styles.signature}>
+            {signature ? (
+              <PdfImage src={signature} style={styles.signatureImage} />
+            ) : (
+              <View style={styles.signatureSpace} />
+            )}
+            <View style={styles.signatureLine} />
+            {invoice.signatory.trim() && <Text style={styles.signatory}>{invoice.signatory}</Text>}
+            <Text style={styles.label}>Authorized Signature</Text>
+          </View>
+        </View>
+
+        {invoice.terms.trim() && (
+          <View style={styles.terms}>
+            <NoteBlock label="Terms:">{invoice.terms}</NoteBlock>
           </View>
         )}
       </Page>
