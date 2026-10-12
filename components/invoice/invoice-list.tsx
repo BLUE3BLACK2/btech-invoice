@@ -1,9 +1,9 @@
 "use client";
 
-import { FileText, Plus, Trash } from "lucide-react";
+import { FileText, Trash } from "lucide-react";
 import { useInvoices } from "@/hooks/use-invoices";
 import { calculateTotals, formatCurrency, formatDate } from "@/lib/invoice";
-import { Button, ButtonLink } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
 const columns = ["Nomor", "Bill To", "Tanggal", "Total"];
@@ -23,12 +23,10 @@ export function InvoiceList() {
         </span>
         <div className="flex flex-col gap-1">
           <h2 className="text-lg font-semibold">Belum ada invoice</h2>
-          <p className="text-sm text-muted">Buat invoice pertama untuk klien BTECH.</p>
+          <p className="text-sm text-muted">
+            Klik Tambah Invoice untuk membuat invoice pertama.
+          </p>
         </div>
-        <ButtonLink href="/invoices/new">
-          <Plus className="size-4" />
-          Tambah Invoice
-        </ButtonLink>
       </Card>
     );
   }
