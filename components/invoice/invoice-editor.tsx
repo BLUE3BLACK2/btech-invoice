@@ -10,6 +10,7 @@ import {
   calculateTotals,
   createInvoice,
   DEFAULT_LOGO,
+  NOTES_PLACEHOLDER,
   type Currency,
   type Invoice,
 } from "@/lib/invoice";
@@ -165,7 +166,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
             <Textarea
               id="notes"
               rows={5}
-              placeholder="Payment information or other notes"
+              placeholder={NOTES_PLACEHOLDER}
               value={invoice.notes}
               onChange={(event) => update("notes", event.target.value)}
             />

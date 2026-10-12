@@ -2,7 +2,23 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
+Copy `.env.example` to `.env.local` and fill in the values:
+
+```bash
+cp .env.example .env.local
+```
+
+| Variable | Description |
+| --- | --- |
+| `NEXT_PUBLIC_DEFAULT_NOTES` | Default notes for new invoices, such as payment details. Use `\n` for line breaks. |
+| `NEXT_PUBLIC_DEFAULT_SIGNATURE` | Default signature image for new invoices, as a `data:image/webp;base64,...` URL. Use a transparent image cropped to the signature. |
+| `NEXT_PUBLIC_DEFAULT_SIGNATORY` | Default signatory name printed under the signature. |
+
+When a variable is empty, new invoices reuse the value from the latest saved invoice.
+
+`.env.local` is ignored by git, so payment details never end up in the repository. Set the same variable in your hosting provider when deploying.
+
+Then, run the development server:
 
 ```bash
 npm run dev

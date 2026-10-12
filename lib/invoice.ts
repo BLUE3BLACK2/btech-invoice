@@ -42,10 +42,14 @@ export const DEFAULT_LOGO = "/images/btech-logo-purple.webp";
 export const DEFAULT_COMPANY_NAME = "PT SKALA INDONESIA GLOBAL";
 export const DEFAULT_CURRENCY: Currency = "IDR";
 export const DEFAULT_DUE_DAYS = 14;
-export const DEFAULT_NOTES = [
-  `Beneficiary Name: ${DEFAULT_COMPANY_NAME}`,
+export const DEFAULT_NOTES = process.env.NEXT_PUBLIC_DEFAULT_NOTES ?? "";
+export const DEFAULT_SIGNATURE = process.env.NEXT_PUBLIC_DEFAULT_SIGNATURE ?? "";
+export const DEFAULT_SIGNATORY = process.env.NEXT_PUBLIC_DEFAULT_SIGNATORY ?? "";
+export const NOTES_PLACEHOLDER = [
+  "Payment via Mandiri:",
+  "Beneficiary Name: ",
   "Account Number: ",
-  "Bank Name: Bank Mandiri",
+  "Bank Name: ",
 ].join("\n");
 export const DEFAULT_TERMS = [
   "1. Payment is due on or before the due date stated above.",
@@ -159,10 +163,10 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     currency: DEFAULT_CURRENCY,
     items: [createLineItem()],
     taxRate: 0,
-    notes: DEFAULT_NOTES,
+    notes: DEFAULT_NOTES || latest?.notes || "",
     terms: DEFAULT_TERMS,
-    signature: latest?.signature ?? "",
-    signatory: latest?.signatory ?? "",
+    signature: DEFAULT_SIGNATURE || latest?.signature || "",
+    signatory: DEFAULT_SIGNATORY || latest?.signatory || "",
     createdAt: new Date().toISOString(),
   };
 }
