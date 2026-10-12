@@ -2,6 +2,17 @@
 
 Semua perubahan penting pada proyek ini dicatat di file ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan versi mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.2.0] - 2026-10-12
+
+### Added
+- Halaman login dan proteksi seluruh aplikasi. Kredensial dari `AUTH_USERNAME` dan `AUTH_PASSWORD`, sesi berupa cookie httpOnly yang ditandatangani `AUTH_SECRET` dan berlaku 7 hari (#8).
+- Tombol Keluar di header (#8).
+
+### Changed
+- Default notes, tanda tangan, dan nama penanda tangan kini dibaca server dan hanya dikirim setelah login, tidak lagi tertanam di bundle JavaScript publik (#8).
+- **Breaking:** `NEXT_PUBLIC_DEFAULT_NOTES`, `NEXT_PUBLIC_DEFAULT_SIGNATURE`, dan `NEXT_PUBLIC_DEFAULT_SIGNATORY` diganti menjadi `INVOICE_DEFAULT_NOTES`, `INVOICE_DEFAULT_SIGNATURE`, dan `INVOICE_DEFAULT_SIGNATORY` (#8).
+- Blok `AGENTS.md` hasil generate `next dev` diperbarui (#9).
+
 ## [0.1.0] - 2026-10-12
 
 ### Added
