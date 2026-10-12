@@ -1,8 +1,9 @@
 "use client";
 
-import { Download, Save } from "lucide-react";
+import { Download, LoaderCircle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import {
   CURRENCIES,
@@ -16,6 +17,7 @@ import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
@@ -34,6 +36,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
   const router = useRouter();
   const [invoice, setInvoice] = useState(() => createInvoice(invoices));
   const [errors, setErrors] = useState<InvoiceErrors>({});
+  const { download, pendingId, failed } = useInvoicePdfDownload();
   const totals = calculateTotals(invoice);
 
   function update<K extends keyof Invoice>(key: K, value: Invoice[K]) {
@@ -50,24 +53,31 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
     return nextErrors;
   }
 
-  function handleSave() {
-    const saved = {
+  function validInvoice() {
+    const current = {
       ...invoice,
       number: invoice.number.trim().toUpperCase(),
       billTo: invoice.billTo.trim(),
     };
-    const nextErrors = validate(saved.number, saved.billTo);
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
+    const nextErrors = validate(current.number, current.billTo);
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length > 0 ? null : current;
+  }
+
+  function handleSave() {
+    const saved = validInvoice();
+    if (!saved) return;
     if (!saveInvoice(saved)) {
       setErrors({ form: "Invoice gagal disimpan. Periksa ruang penyimpanan browser." });
       return;
     }
-    setErrors({});
     setInvoice(createInvoice([...invoices, saved]));
     router.push("/");
+  }
+
+  function handleDownload() {
+    const current = validInvoice();
+    if (current) download(current);
   }
 
   return (
@@ -168,11 +178,15 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
           Simpan Invoice
         </Button>
         {errors.form && <p className="text-xs text-danger">{errors.form}</p>}
-        <Button block variant="secondary" disabled>
-          <Download className="size-4" />
+        <Button block variant="secondary" disabled={pendingId !== null} onClick={handleDownload}>
+          {pendingId ? (
+            <LoaderCircle className="size-4 animate-spin" />
+          ) : (
+            <Download className="size-4" />
+          )}
           Download PDF
         </Button>
-        <p className="text-center text-xs text-subtle">Download PDF segera tersedia.</p>
+        {failed && <p className="text-xs text-danger">PDF gagal dibuat. Coba lagi.</p>}
         <Field label="Currency" htmlFor="currency" className="mt-4 border-t border-border pt-6">
           <Select
             id="currency"
@@ -190,7 +204,7 @@ export function InvoiceEditor() {
   const { invoices, saveInvoice } = useInvoices();
 
   if (!invoices) {
-    return <Card className="p-10 text-center text-sm text-muted">Menyiapkan invoice...</Card>;
+    return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
   return <InvoiceForm invoices={invoices} saveInvoice={saveInvoice} />;
