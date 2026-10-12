@@ -177,6 +177,37 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
             onTaxRateChange={(taxRate) => update("taxRate", taxRate)}
           />
         </div>
+
+        <div className="grid gap-8 md:grid-cols-2">
+          <Field label="Terms" htmlFor="terms">
+            <Textarea
+              id="terms"
+              rows={5}
+              placeholder="Terms and conditions"
+              value={invoice.terms}
+              onChange={(event) => update("terms", event.target.value)}
+            />
+          </Field>
+          <div className="flex flex-col gap-5">
+            <Field label="Signature">
+              <ImagePicker
+                value={invoice.signature}
+                onChange={(signature) => update("signature", signature)}
+                alt="Tanda tangan"
+                pickLabel="Upload Tanda Tangan"
+                emptyText="Belum ada tanda tangan"
+              />
+            </Field>
+            <Field label="Signatory Name" htmlFor="signatory">
+              <Input
+                id="signatory"
+                placeholder="Who signs this invoice?"
+                value={invoice.signatory}
+                onChange={(event) => update("signatory", event.target.value)}
+              />
+            </Field>
+          </div>
+        </div>
       </Card>
 
       <aside className="order-first flex flex-col gap-3 lg:sticky lg:top-6 lg:order-none">

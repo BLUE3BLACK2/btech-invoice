@@ -21,8 +21,14 @@ export type Invoice = {
   items: LineItem[];
   taxRate: number;
   notes: string;
+  terms: string;
+  signature: string;
+  signatory: string;
   createdAt: string;
 };
+
+type StoredInvoice = Omit<Invoice, "terms" | "signature" | "signatory"> &
+  Partial<Pick<Invoice, "terms" | "signature" | "signatory">>;
 
 export type InvoiceTotals = {
   subtotal: number;
@@ -40,6 +46,12 @@ export const DEFAULT_NOTES = [
   `Beneficiary Name: ${DEFAULT_COMPANY_NAME}`,
   "Account Number: ",
   "Bank Name: Bank Mandiri",
+].join("\n");
+export const DEFAULT_TERMS = [
+  "1. Payment is due by the due date stated on this invoice.",
+  "2. Please include the invoice number as the payment reference.",
+  "3. Payments are non-refundable once the service has been delivered.",
+  "4. Late payments may result in suspension of services until the balance is settled.",
 ].join("\n");
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -121,8 +133,20 @@ export function createLineItem(): LineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0 };
 }
 
+export function withInvoiceDefaults(invoice: StoredInvoice): Invoice {
+  return { terms: "", signature: "", signatory: "", ...invoice };
+}
+
+function latestInvoice(invoices: Invoice[]) {
+  return invoices.reduce<Invoice | null>(
+    (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
+    null,
+  );
+}
+
 export function createInvoice(invoices: Invoice[]): Invoice {
   const today = toIsoDate(new Date());
+  const latest = latestInvoice(invoices);
   return {
     id: crypto.randomUUID(),
     number: nextInvoiceNumber(invoices),
@@ -135,6 +159,9 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     items: [createLineItem()],
     taxRate: 0,
     notes: DEFAULT_NOTES,
+    terms: DEFAULT_TERMS,
+    signature: latest?.signature ?? "",
+    signatory: latest?.signatory ?? "",
     createdAt: new Date().toISOString(),
   };
 }
