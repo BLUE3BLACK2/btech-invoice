@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useSyncExternalStore } from "react";
-import type { Invoice } from "@/lib/invoice";
+import { withInvoiceDefaults, type Invoice } from "@/lib/invoice";
 
 const STORAGE_KEY = "btech-invoice:invoices";
 const EMPTY: Invoice[] = [];
@@ -21,7 +21,7 @@ function readInvoices() {
   cachedRaw = raw;
   try {
     const parsed: unknown = raw ? JSON.parse(raw) : EMPTY;
-    cachedInvoices = Array.isArray(parsed) ? (parsed as Invoice[]) : EMPTY;
+    cachedInvoices = Array.isArray(parsed) ? parsed.map(withInvoiceDefaults) : EMPTY;
   } catch {
     cachedInvoices = EMPTY;
   }

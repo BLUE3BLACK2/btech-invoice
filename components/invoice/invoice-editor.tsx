@@ -1,13 +1,15 @@
 "use client";
 
-import { Download, Save } from "lucide-react";
+import { Download, LoaderCircle, Save } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
 import { useInvoices } from "@/hooks/use-invoices";
 import {
   CURRENCIES,
   calculateTotals,
   createInvoice,
+  DEFAULT_LOGO,
   NOTES_PLACEHOLDER,
   type Currency,
   type Invoice,
@@ -15,12 +17,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Field } from "@/components/ui/field";
+import { ImagePicker } from "@/components/ui/image-picker";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
+import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
-import { LogoPicker } from "./logo-picker";
 
 type InvoiceErrors = Partial<Record<"number" | "billTo" | "form", string>>;
 
@@ -35,6 +38,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
   const router = useRouter();
   const [invoice, setInvoice] = useState(() => createInvoice(invoices));
   const [errors, setErrors] = useState<InvoiceErrors>({});
+  const { download, pendingId, failed } = useInvoicePdfDownload();
   const totals = calculateTotals(invoice);
 
   function update<K extends keyof Invoice>(key: K, value: Invoice[K]) {
@@ -51,31 +55,44 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
     return nextErrors;
   }
 
-  function handleSave() {
-    const saved = {
+  function validInvoice() {
+    const current = {
       ...invoice,
       number: invoice.number.trim().toUpperCase(),
       billTo: invoice.billTo.trim(),
     };
-    const nextErrors = validate(saved.number, saved.billTo);
-    if (Object.keys(nextErrors).length > 0) {
-      setErrors(nextErrors);
-      return;
-    }
+    const nextErrors = validate(current.number, current.billTo);
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length > 0 ? null : current;
+  }
+
+  function handleSave() {
+    const saved = validInvoice();
+    if (!saved) return;
     if (!saveInvoice(saved)) {
       setErrors({ form: "Invoice gagal disimpan. Periksa ruang penyimpanan browser." });
       return;
     }
-    setErrors({});
     setInvoice(createInvoice([...invoices, saved]));
     router.push("/");
+  }
+
+  function handleDownload() {
+    const current = validInvoice();
+    if (current) download(current);
   }
 
   return (
     <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[minmax(0,1fr)_260px]">
       <Card className="flex flex-col gap-10 p-6 sm:p-10">
         <div className="flex flex-col-reverse gap-6 sm:flex-row sm:items-start sm:justify-between">
-          <LogoPicker value={invoice.logo} onChange={(logo) => update("logo", logo)} />
+          <ImagePicker
+            value={invoice.logo}
+            onChange={(logo) => update("logo", logo)}
+            alt="Logo perusahaan"
+            pickLabel="Ganti Logo"
+            resetValue={DEFAULT_LOGO}
+          />
           <div className="flex flex-col gap-3 sm:items-end">
             <h2 className="text-4xl font-bold tracking-tight">INVOICE</h2>
             <Field
@@ -161,6 +178,37 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
             onTaxRateChange={(taxRate) => update("taxRate", taxRate)}
           />
         </div>
+
+        <div className="grid gap-8 md:grid-cols-2">
+          <Field label="Terms & Conditions" htmlFor="terms">
+            <Textarea
+              id="terms"
+              rows={8}
+              placeholder="Terms and conditions"
+              value={invoice.terms}
+              onChange={(event) => update("terms", event.target.value)}
+            />
+          </Field>
+          <div className="flex flex-col gap-5">
+            <Field label="Signature">
+              <ImagePicker
+                value={invoice.signature}
+                onChange={(signature) => update("signature", signature)}
+                alt="Tanda tangan"
+                pickLabel="Upload Tanda Tangan"
+                emptyText="Belum ada tanda tangan"
+              />
+            </Field>
+            <Field label="Signatory Name" htmlFor="signatory">
+              <Input
+                id="signatory"
+                placeholder="Who signs this invoice?"
+                value={invoice.signatory}
+                onChange={(event) => update("signatory", event.target.value)}
+              />
+            </Field>
+          </div>
+        </div>
       </Card>
 
       <aside className="order-first flex flex-col gap-3 lg:sticky lg:top-6 lg:order-none">
@@ -169,11 +217,15 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
           Simpan Invoice
         </Button>
         {errors.form && <p className="text-xs text-danger">{errors.form}</p>}
-        <Button block variant="secondary" disabled>
-          <Download className="size-4" />
+        <Button block variant="secondary" disabled={pendingId !== null} onClick={handleDownload}>
+          {pendingId ? (
+            <LoaderCircle className="size-4 animate-spin" />
+          ) : (
+            <Download className="size-4" />
+          )}
           Download PDF
         </Button>
-        <p className="text-center text-xs text-subtle">Download PDF segera tersedia.</p>
+        {failed && <p className="text-xs text-danger">PDF gagal dibuat. Coba lagi.</p>}
         <Field label="Currency" htmlFor="currency" className="mt-4 border-t border-border pt-6">
           <Select
             id="currency"
@@ -191,7 +243,7 @@ export function InvoiceEditor() {
   const { invoices, saveInvoice } = useInvoices();
 
   if (!invoices) {
-    return <Card className="p-10 text-center text-sm text-muted">Menyiapkan invoice...</Card>;
+    return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
   return <InvoiceForm invoices={invoices} saveInvoice={saveInvoice} />;

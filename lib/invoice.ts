@@ -21,8 +21,14 @@ export type Invoice = {
   items: LineItem[];
   taxRate: number;
   notes: string;
+  terms: string;
+  signature: string;
+  signatory: string;
   createdAt: string;
 };
+
+type StoredInvoice = Omit<Invoice, "terms" | "signature" | "signatory"> &
+  Partial<Pick<Invoice, "terms" | "signature" | "signatory">>;
 
 export type InvoiceTotals = {
   subtotal: number;
@@ -42,6 +48,13 @@ export const NOTES_PLACEHOLDER = [
   "Beneficiary Name: ",
   "Account Number: ",
   "Bank Name: ",
+].join("\n");
+export const DEFAULT_TERMS = [
+  "1. Payment is due on or before the due date stated above.",
+  "2. Payment is considered complete once funds are fully received in the listed account. Please send proof of transfer.",
+  "3. Any bank transfer fees are borne by the payer.",
+  "4. Late payment may result in service suspension until payment is received.",
+  "5. All payments received are non-refundable.",
 ].join("\n");
 
 const numberFormatter = new Intl.NumberFormat("en-US", {
@@ -63,6 +76,18 @@ export function formatCurrency(amount: number, currency: Currency) {
 export function formatDate(isoDate: string) {
   if (!isoDate) return "";
   return dateFormatter.format(new Date(`${isoDate}T00:00:00Z`));
+}
+
+export function formatQuantity(quantity: number) {
+  return quantity.toLocaleString("en-US");
+}
+
+export function invoiceTitle(invoice: Pick<Invoice, "number">) {
+  return `Invoice ${invoice.number}`;
+}
+
+export function invoiceFileName(invoice: Pick<Invoice, "number">) {
+  return `${invoiceTitle(invoice)}.pdf`;
 }
 
 export function toIsoDate(date: Date) {
@@ -111,16 +136,20 @@ export function createLineItem(): LineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0 };
 }
 
-function latestNotes(invoices: Invoice[]) {
-  const latest = invoices.reduce<Invoice | null>(
+export function withInvoiceDefaults(invoice: StoredInvoice): Invoice {
+  return { terms: "", signature: "", signatory: "", ...invoice };
+}
+
+function latestInvoice(invoices: Invoice[]) {
+  return invoices.reduce<Invoice | null>(
     (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
     null,
   );
-  return latest?.notes ?? DEFAULT_NOTES;
 }
 
 export function createInvoice(invoices: Invoice[]): Invoice {
   const today = toIsoDate(new Date());
+  const latest = latestInvoice(invoices);
   return {
     id: crypto.randomUUID(),
     number: nextInvoiceNumber(invoices),
@@ -132,7 +161,10 @@ export function createInvoice(invoices: Invoice[]): Invoice {
     currency: DEFAULT_CURRENCY,
     items: [createLineItem()],
     taxRate: 0,
-    notes: latestNotes(invoices),
+    notes: DEFAULT_NOTES || latest?.notes || "",
+    terms: DEFAULT_TERMS,
+    signature: latest?.signature ?? "",
+    signatory: latest?.signatory ?? "",
     createdAt: new Date().toISOString(),
   };
 }
