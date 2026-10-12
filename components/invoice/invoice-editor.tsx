@@ -179,7 +179,7 @@ function InvoiceForm({ invoices, saveInvoice }: InvoiceFormProps) {
         </div>
 
         <div className="grid gap-8 md:grid-cols-2">
-          <Field label="Terms" htmlFor="terms">
+          <Field label="Terms & Conditions" htmlFor="terms">
             <Textarea
               id="terms"
               rows={8}

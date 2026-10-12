@@ -48,10 +48,11 @@ export const DEFAULT_NOTES = [
   "Bank Name: Bank Mandiri",
 ].join("\n");
 export const DEFAULT_TERMS = [
-  "1. Payment is due by the due date stated on this invoice.",
-  "2. Please include the invoice number as the payment reference.",
-  "3. Payments are non-refundable once the service has been delivered.",
-  "4. Late payments may result in suspension of services until the balance is settled.",
+  "1. Payment is due on or before the due date stated above.",
+  "2. Payment is considered complete once funds are fully received in the listed account. Please send proof of transfer.",
+  "3. Any bank transfer fees are borne by the payer.",
+  "4. Late payment may result in service suspension until payment is received.",
+  "5. All payments received are non-refundable.",
 ].join("\n");
 
 const numberFormatter = new Intl.NumberFormat("en-US", {

@@ -48,6 +48,8 @@ const fonts = {
   bold: "Helvetica-Bold",
 };
 
+const LIST_ITEM = /^(\d+\.)\s+(.*)$/;
+
 Font.registerHyphenationCallback((word) => [word]);
 
 const styles = StyleSheet.create({
@@ -186,6 +188,15 @@ const styles = StyleSheet.create({
   noteBody: {
     marginTop: 3,
   },
+  listItem: {
+    flexDirection: "row",
+  },
+  listMarker: {
+    width: 13.5,
+  },
+  listText: {
+    flex: 1,
+  },
   signature: {
     width: 180,
     alignItems: "center",
@@ -249,7 +260,19 @@ function NoteBlock({ label, children }: NoteBlockProps) {
   return (
     <View wrap={false}>
       <Text style={styles.label}>{label}</Text>
-      <Text style={styles.noteBody}>{children}</Text>
+      <View style={styles.noteBody}>
+        {children.split("\n").map((line, index) => {
+          const item = LIST_ITEM.exec(line);
+          return item ? (
+            <View key={index} style={styles.listItem}>
+              <Text style={styles.listMarker}>{item[1]}</Text>
+              <Text style={styles.listText}>{item[2]}</Text>
+            </View>
+          ) : (
+            <Text key={index}>{line || " "}</Text>
+          );
+        })}
+      </View>
     </View>
   );
 }
@@ -373,7 +396,7 @@ export function InvoiceDocument({ invoice, logo, signature }: InvoiceDocumentPro
 
         {invoice.terms.trim() && (
           <View style={styles.terms}>
-            <NoteBlock label="Terms:">{invoice.terms}</NoteBlock>
+            <NoteBlock label="Terms & Conditions:">{invoice.terms}</NoteBlock>
           </View>
         )}
       </Page>
