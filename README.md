@@ -34,6 +34,8 @@ The script reads `DATABASE_URL` from `.env.local` and runs `db/schema.sql`, whic
 
 Each invoice gets an auto-incrementing id. New invoices get the next invoice number automatically: the app takes the prefix of the latest invoice and adds one to the highest number with that prefix, so `BTECH-CRM/AI-0001` is followed by `BTECH-CRM/AI-0002`. The number can still be changed before saving, and duplicate numbers are rejected.
 
+Every Bill To name is saved as a client together with its details (address, email, phone). When creating an invoice, pick an existing client from the Bill To suggestions to fill in the details automatically. Saving an invoice with new details updates the client; empty details keep the saved ones.
+
 Invoices saved in the browser by older versions show up as a banner on the invoice list with a button to move them into the database.
 
 `.env.local` is ignored by git, so credentials and payment details never end up in the repository. Set the same variables in your hosting provider when deploying.

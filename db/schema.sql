@@ -16,3 +16,13 @@ CREATE TABLE IF NOT EXISTS invoices (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+ALTER TABLE invoices ADD COLUMN IF NOT EXISTS bill_to_details text NOT NULL DEFAULT '';
+
+CREATE TABLE IF NOT EXISTS clients (
+  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name text NOT NULL UNIQUE,
+  details text NOT NULL DEFAULT '',
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
