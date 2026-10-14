@@ -1,13 +1,15 @@
 import "server-only";
 
-import { verifySession } from "./auth";
-import type { InvoiceDefaults } from "./invoice";
+import { nextInvoiceNumber, type InvoiceDefaults } from "./invoice";
+import { getLatestInvoice, listInvoiceNumbers } from "./invoice-store";
 
 export async function getInvoiceDefaults(): Promise<InvoiceDefaults> {
-  await verifySession();
+  const [numbers, latest] = await Promise.all([listInvoiceNumbers(), getLatestInvoice()]);
   return {
-    notes: (process.env.INVOICE_DEFAULT_NOTES ?? "").replaceAll("\\n", "\n"),
-    signature: process.env.INVOICE_DEFAULT_SIGNATURE ?? "",
-    signatory: process.env.INVOICE_DEFAULT_SIGNATORY ?? "",
+    number: nextInvoiceNumber(numbers),
+    notes:
+      (process.env.INVOICE_DEFAULT_NOTES ?? "").replaceAll("\n", "\n") || latest?.notes || "",
+    signature: process.env.INVOICE_DEFAULT_SIGNATURE || latest?.signature || "",
+    signatory: process.env.INVOICE_DEFAULT_SIGNATORY || latest?.signatory || "",
   };
 }

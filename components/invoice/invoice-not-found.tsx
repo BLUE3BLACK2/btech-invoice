@@ -7,7 +7,7 @@ export function InvoiceNotFound() {
     <EmptyState
       icon={FileX}
       title="Invoice tidak ditemukan"
-      description="Invoice mungkin sudah dihapus atau disimpan di browser lain."
+      description="Invoice mungkin sudah dihapus."
       action={<ButtonLink href="/">Lihat daftar invoice</ButtonLink>}
     />
   );

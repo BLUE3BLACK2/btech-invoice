@@ -2,7 +2,6 @@
 
 import { Download, Pencil } from "lucide-react";
 import { useInvoicePdf } from "@/hooks/use-invoice-pdf";
-import { useInvoices } from "@/hooks/use-invoices";
 import {
   calculateTotals,
   formatCurrency,
@@ -14,12 +13,10 @@ import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { PageHeading } from "@/components/page-heading";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { StatusCard } from "@/components/ui/status-card";
-import { InvoiceNotFound } from "./invoice-not-found";
 import { SummaryRow } from "./invoice-summary";
 import { PdfPages } from "./pdf-pages";
 
-function InvoicePdfPreview({ invoice }: { invoice: Invoice }) {
+export function InvoicePreview({ invoice }: { invoice: Invoice }) {
   const pdf = useInvoicePdf(invoice);
   const ready = pdf && "blob" in pdf ? pdf : null;
   const totals = calculateTotals(invoice);
@@ -68,20 +65,4 @@ function InvoicePdfPreview({ invoice }: { invoice: Invoice }) {
       </div>
     </div>
   );
-}
-
-export function InvoicePreview({ id }: { id: string }) {
-  const { invoices } = useInvoices();
-
-  if (!invoices) {
-    return <StatusCard>Memuat invoice...</StatusCard>;
-  }
-
-  const invoice = invoices.find((item) => item.id === id);
-
-  if (!invoice) {
-    return <InvoiceNotFound />;
-  }
-
-  return <InvoicePdfPreview invoice={invoice} />;
 }

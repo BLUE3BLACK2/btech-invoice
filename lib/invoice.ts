@@ -10,7 +10,7 @@ export type LineItem = {
 };
 
 export type Invoice = {
-  id: string;
+  id: number;
   number: string;
   logo: string;
   companyName: string;
@@ -24,13 +24,16 @@ export type Invoice = {
   terms: string;
   signature: string;
   signatory: string;
-  createdAt: string;
 };
 
-type StoredInvoice = Omit<Invoice, "terms" | "signature" | "signatory"> &
-  Partial<Pick<Invoice, "terms" | "signature" | "signatory">>;
+export type InvoiceSummary = Pick<
+  Invoice,
+  "id" | "number" | "billTo" | "date" | "currency" | "items" | "taxRate"
+>;
 
-export type InvoiceDefaults = Pick<Invoice, "notes" | "signature" | "signatory">;
+export type InvoiceDefaults = Pick<Invoice, "number" | "notes" | "signature" | "signatory">;
+
+export type InvoiceErrors = Partial<Record<"number" | "billTo" | "form", string>>;
 
 export type InvoiceTotals = {
   subtotal: number;
@@ -44,6 +47,9 @@ export const DEFAULT_LOGO = "/images/btech-logo-purple.webp";
 export const DEFAULT_COMPANY_NAME = "PT SKALA INDONESIA GLOBAL";
 export const DEFAULT_CURRENCY: Currency = "IDR";
 export const DEFAULT_DUE_DAYS = 14;
+const SEQUENCE_DIGITS = 4;
+const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+const NUMBERED = /^(.*?)(\d+)$/;
 export const NOTES_PLACEHOLDER = [
   "Payment via Mandiri:",
   "Beneficiary Name: ",
@@ -104,9 +110,9 @@ export function addDays(isoDate: string, days: number) {
   return toIsoDate(date);
 }
 
-export function parseAmount(value: string) {
-  const amount = Number(value);
-  return Number.isFinite(amount) && amount > 0 ? amount : 0;
+export function parseAmount(value: unknown) {
+  const amount = typeof value === "string" ? Number(value) : value;
+  return typeof amount === "number" && Number.isFinite(amount) && amount > 0 ? amount : 0;
 }
 
 export function lineItemAmount(item: LineItem) {
@@ -120,40 +126,30 @@ export function calculateTotals(invoice: Pick<Invoice, "items" | "taxRate">): In
   return { subtotal, tax, total, balanceDue: total };
 }
 
-function parseInvoiceSequence(number: string) {
-  const match = new RegExp(`^${INVOICE_PREFIX}(\\d+)$`).exec(number.trim().toUpperCase());
-  return match ? Number(match[1]) : 0;
+function splitInvoiceNumber(number: string) {
+  const match = NUMBERED.exec(number.trim().toUpperCase());
+  return match ? { prefix: match[1], digits: match[2] } : null;
 }
 
-export function nextInvoiceNumber(invoices: Invoice[]) {
-  const last = invoices.reduce(
-    (max, invoice) => Math.max(max, parseInvoiceSequence(invoice.number)),
+export function nextInvoiceNumber(numbersNewestFirst: string[]) {
+  const parts = numbersNewestFirst.map(splitInvoiceNumber);
+  const latest = parts.find((part) => part !== null);
+  if (!latest) return `${INVOICE_PREFIX}${"1".padStart(SEQUENCE_DIGITS, "0")}`;
+  const last = parts.reduce(
+    (max, part) => (part?.prefix === latest.prefix ? Math.max(max, Number(part.digits)) : max),
     0,
   );
-  return `${INVOICE_PREFIX}${String(last + 1).padStart(4, "0")}`;
+  return `${latest.prefix}${String(last + 1).padStart(latest.digits.length, "0")}`;
 }
 
 export function createLineItem(): LineItem {
   return { id: crypto.randomUUID(), description: "", quantity: 1, rate: 0 };
 }
 
-export function withInvoiceDefaults(invoice: StoredInvoice): Invoice {
-  return { terms: "", signature: "", signatory: "", ...invoice };
-}
-
-function latestInvoice(invoices: Invoice[]) {
-  return invoices.reduce<Invoice | null>(
-    (current, invoice) => (!current || invoice.createdAt > current.createdAt ? invoice : current),
-    null,
-  );
-}
-
-export function createInvoice(invoices: Invoice[], defaults: InvoiceDefaults): Invoice {
+export function createInvoice(defaults: InvoiceDefaults): Invoice {
   const today = toIsoDate(new Date());
-  const latest = latestInvoice(invoices);
   return {
-    id: crypto.randomUUID(),
-    number: nextInvoiceNumber(invoices),
+    id: 0,
     logo: DEFAULT_LOGO,
     companyName: DEFAULT_COMPANY_NAME,
     billTo: "",
@@ -162,10 +158,54 @@ export function createInvoice(invoices: Invoice[], defaults: InvoiceDefaults): I
     currency: DEFAULT_CURRENCY,
     items: [createLineItem()],
     taxRate: 0,
-    notes: defaults.notes || latest?.notes || "",
     terms: DEFAULT_TERMS,
-    signature: defaults.signature || latest?.signature || "",
-    signatory: defaults.signatory || latest?.signatory || "",
-    createdAt: new Date().toISOString(),
+    ...defaults,
+  };
+}
+
+export function validateInvoice(invoice: Pick<Invoice, "number" | "billTo">) {
+  const errors: InvoiceErrors = {};
+  if (!invoice.number) errors.number = "Nomor invoice wajib diisi.";
+  if (!invoice.billTo) errors.billTo = "Bill To wajib diisi.";
+  return errors;
+}
+
+function text(value: unknown) {
+  return typeof value === "string" ? value : "";
+}
+
+function parseLineItem(input: unknown): LineItem {
+  const item = (input ?? {}) as Record<string, unknown>;
+  return {
+    id: text(item.id) || crypto.randomUUID(),
+    description: text(item.description),
+    quantity: parseAmount(item.quantity),
+    rate: parseAmount(item.rate),
+  };
+}
+
+export function parseInvoice(input: unknown): Invoice | null {
+  if (!input || typeof input !== "object") return null;
+  const invoice = input as Record<string, unknown>;
+  const date = text(invoice.date);
+  const dueDate = text(invoice.dueDate);
+  if (!ISO_DATE.test(date) || !ISO_DATE.test(dueDate) || !Array.isArray(invoice.items)) {
+    return null;
+  }
+  return {
+    id: Number.isSafeInteger(invoice.id) ? Number(invoice.id) : 0,
+    number: text(invoice.number).trim().toUpperCase(),
+    logo: text(invoice.logo) || DEFAULT_LOGO,
+    companyName: text(invoice.companyName),
+    billTo: text(invoice.billTo).trim(),
+    date,
+    dueDate,
+    currency: CURRENCIES.find((currency) => currency === invoice.currency) ?? DEFAULT_CURRENCY,
+    items: invoice.items.map(parseLineItem),
+    taxRate: parseAmount(invoice.taxRate),
+    notes: text(invoice.notes),
+    terms: text(invoice.terms),
+    signature: text(invoice.signature),
+    signatory: text(invoice.signatory),
   };
 }
