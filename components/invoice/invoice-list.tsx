@@ -2,25 +2,23 @@
 
 import { Download, FileText, LoaderCircle, Pencil, Trash } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { unstable_rethrow, useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
+import { deleteInvoiceAction } from "@/app/(app)/invoices/actions";
 import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
-import { useInvoices } from "@/hooks/use-invoices";
-import { calculateTotals, formatCurrency, formatDate } from "@/lib/invoice";
+import { calculateTotals, formatCurrency, formatDate, type InvoiceSummary } from "@/lib/invoice";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
-import { StatusCard } from "@/components/ui/status-card";
 
 const columns = ["Nomor", "Bill To", "Tanggal", "Total"];
 
-export function InvoiceList() {
+export function InvoiceList({ invoices }: { invoices: InvoiceSummary[] }) {
   const router = useRouter();
-  const { invoices, deleteInvoice } = useInvoices();
   const { download, pendingId, failed } = useInvoicePdfDownload();
-
-  if (!invoices) {
-    return <StatusCard>Memuat invoice...</StatusCard>;
-  }
+  const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteFailed, setDeleteFailed] = useState(false);
+  const [, startDeleting] = useTransition();
 
   if (invoices.length === 0) {
     return (
@@ -32,15 +30,26 @@ export function InvoiceList() {
     );
   }
 
-  const sorted = [...invoices].sort((a, b) => b.number.localeCompare(a.number));
-
-  function handleDelete(id: string, number: string) {
-    if (window.confirm(`Hapus invoice ${number}?`)) deleteInvoice(id);
+  function handleDelete(id: number, number: string) {
+    if (!window.confirm(`Hapus invoice ${number}?`)) return;
+    setDeletingId(id);
+    setDeleteFailed(false);
+    startDeleting(async () => {
+      try {
+        await deleteInvoiceAction(id);
+      } catch (error) {
+        unstable_rethrow(error);
+        setDeleteFailed(true);
+      } finally {
+        setDeletingId(null);
+      }
+    });
   }
 
   return (
     <div className="flex flex-col gap-3">
       {failed && <p className="text-sm text-danger">PDF gagal dibuat. Coba lagi.</p>}
+      {deleteFailed && <p className="text-sm text-danger">Invoice gagal dihapus. Coba lagi.</p>}
       <Card className="relative overflow-x-auto">
         <table className="w-full min-w-[720px] text-left text-sm">
           <thead>
@@ -60,7 +69,7 @@ export function InvoiceList() {
             </tr>
           </thead>
           <tbody>
-            {sorted.map((invoice) => (
+            {invoices.map((invoice) => (
               <tr
                 key={invoice.id}
                 className="cursor-pointer border-b border-border last:border-0 hover:bg-canvas"
@@ -87,7 +96,7 @@ export function InvoiceList() {
                       size="icon"
                       aria-label={`Download PDF invoice ${invoice.number}`}
                       disabled={pendingId !== null}
-                      onClick={() => download(invoice)}
+                      onClick={() => download(invoice.id)}
                     >
                       {pendingId === invoice.id ? (
                         <LoaderCircle className="size-4 animate-spin" />
@@ -107,9 +116,14 @@ export function InvoiceList() {
                       variant="danger"
                       size="icon"
                       aria-label={`Hapus invoice ${invoice.number}`}
+                      disabled={deletingId !== null}
                       onClick={() => handleDelete(invoice.id, invoice.number)}
                     >
-                      <Trash className="size-4" />
+                      {deletingId === invoice.id ? (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      ) : (
+                        <Trash className="size-4" />
+                      )}
                     </Button>
                   </div>
                 </td>
