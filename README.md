@@ -16,10 +16,25 @@ cp .env.example .env.local
 | `INVOICE_DEFAULT_NOTES` | Default notes for new invoices, such as payment details. Use `\n` for line breaks. |
 | `INVOICE_DEFAULT_SIGNATURE` | Default signature image for new invoices, as a `data:image/webp;base64,...` URL. Use a transparent image cropped to the signature. |
 | `INVOICE_DEFAULT_SIGNATORY` | Default signatory name printed under the signature. |
+| `DATABASE_URL` | PostgreSQL connection string where invoices are stored. |
 
 Every page requires login. The app stays locked until `AUTH_USERNAME`, `AUTH_PASSWORD`, and `AUTH_SECRET` are set.
 
 The invoice defaults are read on the server and sent only to signed-in users, so they never end up in the public JavaScript bundle. When a default is empty, new invoices reuse the value from the latest saved invoice.
+
+## Database
+
+Invoices are stored in PostgreSQL. Create or update the tables with:
+
+```bash
+npm run db:migrate
+```
+
+The script reads `DATABASE_URL` from `.env.local` and runs `db/schema.sql`, which is safe to run more than once. Run it again whenever the schema changes.
+
+Each invoice gets an auto-incrementing id. New invoices get the next invoice number automatically: the app takes the prefix of the latest invoice and adds one to the highest number with that prefix, so `BTECH-CRM/AI-0001` is followed by `BTECH-CRM/AI-0002`. The number can still be changed before saving, and duplicate numbers are rejected.
+
+Invoices saved in the browser by older versions show up as a banner on the invoice list with a button to move them into the database.
 
 `.env.local` is ignored by git, so credentials and payment details never end up in the repository. Set the same variables in your hosting provider when deploying.
 
