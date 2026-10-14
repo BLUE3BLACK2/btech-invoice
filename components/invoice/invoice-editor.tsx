@@ -1,19 +1,23 @@
 "use client";
 
 import { Download, LoaderCircle, Save } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { unstable_rethrow } from "next/navigation";
+import { useState, useTransition } from "react";
+import { saveInvoiceAction } from "@/app/(app)/invoices/actions";
 import { useInvoicePdfDownload } from "@/hooks/use-invoice-pdf";
-import { useInvoices } from "@/hooks/use-invoices";
+import { useIsClient } from "@/hooks/use-is-client";
 import {
   CURRENCIES,
   calculateTotals,
   createInvoice,
   DEFAULT_LOGO,
   NOTES_PLACEHOLDER,
+  validateInvoice,
+  type Client,
   type Currency,
   type Invoice,
   type InvoiceDefaults,
+  type InvoiceErrors,
 } from "@/lib/invoice";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -23,31 +27,21 @@ import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { StatusCard } from "@/components/ui/status-card";
 import { Textarea } from "@/components/ui/textarea";
-import { InvoiceNotFound } from "./invoice-not-found";
 import { InvoiceSummary } from "./invoice-summary";
 import { LineItemsTable } from "./line-items-table";
-
-type InvoiceErrors = Partial<Record<"number" | "billTo" | "form", string>>;
 
 const currencyOptions = CURRENCIES.map((currency) => ({ value: currency, label: currency }));
 
 type InvoiceFormProps = {
-  invoices: Invoice[];
   initialInvoice: () => Invoice;
+  clients: Client[];
   saveLabel: string;
-  saveInvoice: (invoice: Invoice) => boolean;
-  onSaved: (invoice: Invoice) => void;
 };
 
-function InvoiceForm({
-  invoices,
-  initialInvoice,
-  saveLabel,
-  saveInvoice,
-  onSaved,
-}: InvoiceFormProps) {
+function InvoiceForm({ initialInvoice, clients, saveLabel }: InvoiceFormProps) {
   const [invoice, setInvoice] = useState(initialInvoice);
   const [errors, setErrors] = useState<InvoiceErrors>({});
+  const [saving, startSaving] = useTransition();
   const { download, pendingId, failed } = useInvoicePdfDownload();
   const totals = calculateTotals(invoice);
 
@@ -55,14 +49,15 @@ function InvoiceForm({
     setInvoice((current) => ({ ...current, [key]: value }));
   }
 
-  function validate(number: string, billTo: string) {
-    const nextErrors: InvoiceErrors = {};
-    if (!number) nextErrors.number = "Nomor invoice wajib diisi.";
-    else if (invoices.some((item) => item.id !== invoice.id && item.number === number)) {
-      nextErrors.number = "Nomor invoice sudah dipakai.";
-    }
-    if (!billTo) nextErrors.billTo = "Bill To wajib diisi.";
-    return nextErrors;
+  function updateBillTo(billTo: string) {
+    const client = clients.find(
+      (item) => item.name.toLowerCase() === billTo.trim().toLowerCase(),
+    );
+    setInvoice((current) => ({
+      ...current,
+      billTo,
+      billToDetails: client?.details || current.billToDetails,
+    }));
   }
 
   function validInvoice() {
@@ -71,7 +66,7 @@ function InvoiceForm({
       number: invoice.number.trim().toUpperCase(),
       billTo: invoice.billTo.trim(),
     };
-    const nextErrors = validate(current.number, current.billTo);
+    const nextErrors = validateInvoice(current);
     setErrors(nextErrors);
     return Object.keys(nextErrors).length > 0 ? null : current;
   }
@@ -79,11 +74,14 @@ function InvoiceForm({
   function handleSave() {
     const saved = validInvoice();
     if (!saved) return;
-    if (!saveInvoice(saved)) {
-      setErrors({ form: "Invoice gagal disimpan. Periksa ruang penyimpanan browser." });
-      return;
-    }
-    onSaved(saved);
+    startSaving(async () => {
+      try {
+        setErrors(await saveInvoiceAction(saved));
+      } catch (error) {
+        unstable_rethrow(error);
+        setErrors({ form: "Invoice gagal disimpan. Periksa koneksi lalu coba lagi." });
+      }
+    });
   }
 
   function handleDownload() {
@@ -136,10 +134,26 @@ function InvoiceForm({
             <Field label="Bill To" htmlFor="bill-to" error={errors.billTo}>
               <Input
                 id="bill-to"
+                list="client-options"
+                autoComplete="off"
                 placeholder="Who is this to?"
                 invalid={Boolean(errors.billTo)}
                 value={invoice.billTo}
-                onChange={(event) => update("billTo", event.target.value)}
+                onChange={(event) => updateBillTo(event.target.value)}
+              />
+              <datalist id="client-options">
+                {clients.map((client) => (
+                  <option key={client.name} value={client.name} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Bill To Details" htmlFor="bill-to-details">
+              <Textarea
+                id="bill-to-details"
+                rows={3}
+                placeholder="Alamat, email, atau nomor telepon klien"
+                value={invoice.billToDetails}
+                onChange={(event) => update("billToDetails", event.target.value)}
               />
             </Field>
           </div>
@@ -221,8 +235,8 @@ function InvoiceForm({
       </Card>
 
       <aside className="order-first flex flex-col gap-3 lg:sticky lg:top-6 lg:order-none">
-        <Button block onClick={handleSave}>
-          <Save className="size-4" />
+        <Button block disabled={saving} onClick={handleSave}>
+          {saving ? <LoaderCircle className="size-4 animate-spin" /> : <Save className="size-4" />}
           {saveLabel}
         </Button>
         {errors.form && <p className="text-xs text-danger">{errors.form}</p>}
@@ -248,52 +262,35 @@ function InvoiceForm({
   );
 }
 
-export function InvoiceEditor({ defaults }: { defaults: InvoiceDefaults }) {
-  const router = useRouter();
-  const { invoices, saveInvoice } = useInvoices();
-  const [formKey, setFormKey] = useState(0);
+export function InvoiceEditor({
+  defaults,
+  clients,
+}: {
+  defaults: InvoiceDefaults;
+  clients: Client[];
+}) {
+  const isClient = useIsClient();
 
-  if (!invoices) {
+  if (!isClient) {
     return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
   return (
     <InvoiceForm
-      key={formKey}
-      invoices={invoices}
-      initialInvoice={() => createInvoice(invoices, defaults)}
+      initialInvoice={() => createInvoice(defaults)}
+      clients={clients}
       saveLabel="Simpan Invoice"
-      saveInvoice={saveInvoice}
-      onSaved={() => {
-        setFormKey((key) => key + 1);
-        router.push("/");
-      }}
     />
   );
 }
 
-export function EditInvoiceEditor({ id }: { id: string }) {
-  const router = useRouter();
-  const { invoices, saveInvoice } = useInvoices();
-
-  if (!invoices) {
-    return <StatusCard>Memuat invoice...</StatusCard>;
-  }
-
-  const invoice = invoices.find((item) => item.id === id);
-
-  if (!invoice) {
-    return <InvoiceNotFound />;
-  }
-
+export function EditInvoiceEditor({ invoice, clients }: { invoice: Invoice; clients: Client[] }) {
   return (
     <InvoiceForm
       key={invoice.id}
-      invoices={invoices}
       initialInvoice={() => invoice}
+      clients={clients}
       saveLabel="Simpan Perubahan"
-      saveInvoice={saveInvoice}
-      onSaved={(saved) => router.push(`/invoices/${saved.id}`)}
     />
   );
 }

@@ -10,6 +10,8 @@ import {
 } from "@/lib/invoice";
 
 const PAGE_MARGIN = 36;
+const PAGE_WIDTH = 612;
+const CONTENT_INSET = 48;
 const FONT_SIZE = 9.75;
 const BALANCE_FONT_SIZE = 11.25;
 const LINE_HEIGHT = 13.5;
@@ -102,7 +104,7 @@ const styles = StyleSheet.create({
   billTo: {
     flex: 1,
     paddingTop: 8.25,
-    paddingLeft: 48,
+    paddingLeft: CONTENT_INSET,
     paddingRight: 24,
   },
   label: {
@@ -178,7 +180,7 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: "row",
     marginTop: 39,
-    paddingLeft: 48,
+    paddingLeft: CONTENT_INSET,
     paddingRight: 44.25,
   },
   notes: {
@@ -221,8 +223,9 @@ const styles = StyleSheet.create({
     fontFamily: fonts.bold,
   },
   terms: {
+    width: PAGE_WIDTH / 2 - CONTENT_INSET,
     marginTop: 22.5,
-    paddingHorizontal: 48,
+    marginLeft: CONTENT_INSET,
   },
 });
 
@@ -338,6 +341,7 @@ export function InvoiceDocument({ invoice, logo, signature }: InvoiceDocumentPro
           <View style={styles.billTo}>
             <Text style={styles.label}>Bill To:</Text>
             <Text style={styles.billToName}>{invoice.billTo}</Text>
+            {invoice.billToDetails.trim() && <Text>{invoice.billToDetails}</Text>}
           </View>
           <View style={styles.amounts}>
             <AmountRow label="Date:" value={amounts.date} valueWidth={valueWidth} />

@@ -3,6 +3,7 @@ import "server-only";
 import { createHash, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { connection } from "next/server";
 import { isValidSessionToken, SESSION_COOKIE } from "./session";
 
 function digest(value: string) {
@@ -25,6 +26,7 @@ export function checkCredentials(username: string, password: string) {
 }
 
 export async function verifySession() {
+  await connection();
   const token = (await cookies()).get(SESSION_COOKIE)?.value;
   if (!(await isValidSessionToken(token))) redirect("/login");
 }

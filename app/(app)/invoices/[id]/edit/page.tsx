@@ -2,12 +2,20 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { BackLink } from "@/components/back-link";
 import { EditInvoiceEditor } from "@/components/invoice/invoice-editor";
+import { InvoiceNotFound } from "@/components/invoice/invoice-not-found";
 import { PageHeading } from "@/components/page-heading";
 import { StatusCard } from "@/components/ui/status-card";
+import { listClients } from "@/lib/client-store";
+import { getInvoice } from "@/lib/invoice-store";
 
 export const metadata: Metadata = {
   title: "Edit Invoice",
 };
+
+async function Editor({ id }: { id: string }) {
+  const [invoice, clients] = await Promise.all([getInvoice(id), listClients()]);
+  return invoice ? <EditInvoiceEditor invoice={invoice} clients={clients} /> : <InvoiceNotFound />;
+}
 
 export default function EditInvoicePage({ params }: PageProps<"/invoices/[id]/edit">) {
   return (
@@ -18,7 +26,7 @@ export default function EditInvoicePage({ params }: PageProps<"/invoices/[id]/ed
       </div>
       <Suspense fallback={<StatusCard>Memuat invoice...</StatusCard>}>
         {params.then(({ id }) => (
-          <EditInvoiceEditor id={id} />
+          <Editor id={id} />
         ))}
       </Suspense>
     </main>

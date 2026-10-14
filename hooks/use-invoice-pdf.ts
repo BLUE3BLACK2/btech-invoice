@@ -1,6 +1,8 @@
 "use client";
 
+import { unstable_rethrow } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
+import { getInvoiceAction } from "@/app/(app)/invoices/actions";
 import type { Invoice } from "@/lib/invoice";
 import { downloadInvoicePdf, renderInvoicePdf } from "@/lib/invoice-pdf";
 
@@ -28,15 +30,18 @@ export function useInvoicePdf(invoice: Invoice | undefined) {
 }
 
 export function useInvoicePdfDownload() {
-  const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingId, setPendingId] = useState<number | null>(null);
   const [failed, setFailed] = useState(false);
 
-  const download = useCallback(async (invoice: Invoice) => {
-    setPendingId(invoice.id);
+  const download = useCallback(async (source: Invoice | number) => {
+    setPendingId(typeof source === "number" ? source : source.id);
     setFailed(false);
     try {
-      downloadInvoicePdf(invoice, await renderInvoicePdf(invoice));
-    } catch {
+      const invoice = typeof source === "number" ? await getInvoiceAction(source) : source;
+      if (invoice) downloadInvoicePdf(invoice, await renderInvoicePdf(invoice));
+      else setFailed(true);
+    } catch (error) {
+      unstable_rethrow(error);
       setFailed(true);
     } finally {
       setPendingId(null);
