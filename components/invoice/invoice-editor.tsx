@@ -13,6 +13,7 @@ import {
   DEFAULT_LOGO,
   NOTES_PLACEHOLDER,
   validateInvoice,
+  type Client,
   type Currency,
   type Invoice,
   type InvoiceDefaults,
@@ -33,10 +34,11 @@ const currencyOptions = CURRENCIES.map((currency) => ({ value: currency, label: 
 
 type InvoiceFormProps = {
   initialInvoice: () => Invoice;
+  clients: Client[];
   saveLabel: string;
 };
 
-function InvoiceForm({ initialInvoice, saveLabel }: InvoiceFormProps) {
+function InvoiceForm({ initialInvoice, clients, saveLabel }: InvoiceFormProps) {
   const [invoice, setInvoice] = useState(initialInvoice);
   const [errors, setErrors] = useState<InvoiceErrors>({});
   const [saving, startSaving] = useTransition();
@@ -45,6 +47,17 @@ function InvoiceForm({ initialInvoice, saveLabel }: InvoiceFormProps) {
 
   function update<K extends keyof Invoice>(key: K, value: Invoice[K]) {
     setInvoice((current) => ({ ...current, [key]: value }));
+  }
+
+  function updateBillTo(billTo: string) {
+    const client = clients.find(
+      (item) => item.name.toLowerCase() === billTo.trim().toLowerCase(),
+    );
+    setInvoice((current) => ({
+      ...current,
+      billTo,
+      billToDetails: client?.details || current.billToDetails,
+    }));
   }
 
   function validInvoice() {
@@ -121,10 +134,26 @@ function InvoiceForm({ initialInvoice, saveLabel }: InvoiceFormProps) {
             <Field label="Bill To" htmlFor="bill-to" error={errors.billTo}>
               <Input
                 id="bill-to"
+                list="client-options"
+                autoComplete="off"
                 placeholder="Who is this to?"
                 invalid={Boolean(errors.billTo)}
                 value={invoice.billTo}
-                onChange={(event) => update("billTo", event.target.value)}
+                onChange={(event) => updateBillTo(event.target.value)}
+              />
+              <datalist id="client-options">
+                {clients.map((client) => (
+                  <option key={client.name} value={client.name} />
+                ))}
+              </datalist>
+            </Field>
+            <Field label="Bill To Details" htmlFor="bill-to-details">
+              <Textarea
+                id="bill-to-details"
+                rows={3}
+                placeholder="Alamat, email, atau nomor telepon klien"
+                value={invoice.billToDetails}
+                onChange={(event) => update("billToDetails", event.target.value)}
               />
             </Field>
           </div>
@@ -233,16 +262,35 @@ function InvoiceForm({ initialInvoice, saveLabel }: InvoiceFormProps) {
   );
 }
 
-export function InvoiceEditor({ defaults }: { defaults: InvoiceDefaults }) {
+export function InvoiceEditor({
+  defaults,
+  clients,
+}: {
+  defaults: InvoiceDefaults;
+  clients: Client[];
+}) {
   const isClient = useIsClient();
 
   if (!isClient) {
     return <StatusCard>Menyiapkan invoice...</StatusCard>;
   }
 
-  return <InvoiceForm initialInvoice={() => createInvoice(defaults)} saveLabel="Simpan Invoice" />;
+  return (
+    <InvoiceForm
+      initialInvoice={() => createInvoice(defaults)}
+      clients={clients}
+      saveLabel="Simpan Invoice"
+    />
+  );
 }
 
-export function EditInvoiceEditor({ invoice }: { invoice: Invoice }) {
-  return <InvoiceForm key={invoice.id} initialInvoice={() => invoice} saveLabel="Simpan Perubahan" />;
+export function EditInvoiceEditor({ invoice, clients }: { invoice: Invoice; clients: Client[] }) {
+  return (
+    <InvoiceForm
+      key={invoice.id}
+      initialInvoice={() => invoice}
+      clients={clients}
+      saveLabel="Simpan Perubahan"
+    />
+  );
 }

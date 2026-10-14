@@ -4,6 +4,7 @@ import { BackLink } from "@/components/back-link";
 import { InvoiceEditor } from "@/components/invoice/invoice-editor";
 import { PageHeading } from "@/components/page-heading";
 import { StatusCard } from "@/components/ui/status-card";
+import { listClients } from "@/lib/client-store";
 import { getInvoiceDefaults } from "@/lib/invoice-defaults";
 
 export const metadata: Metadata = {
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
 };
 
 async function NewInvoiceEditor() {
-  return <InvoiceEditor defaults={await getInvoiceDefaults()} />;
+  const [defaults, clients] = await Promise.all([getInvoiceDefaults(), listClients()]);
+  return <InvoiceEditor defaults={defaults} clients={clients} />;
 }
 
 export default function NewInvoicePage() {

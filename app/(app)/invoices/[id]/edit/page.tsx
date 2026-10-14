@@ -5,6 +5,7 @@ import { EditInvoiceEditor } from "@/components/invoice/invoice-editor";
 import { InvoiceNotFound } from "@/components/invoice/invoice-not-found";
 import { PageHeading } from "@/components/page-heading";
 import { StatusCard } from "@/components/ui/status-card";
+import { listClients } from "@/lib/client-store";
 import { getInvoice } from "@/lib/invoice-store";
 
 export const metadata: Metadata = {
@@ -12,8 +13,8 @@ export const metadata: Metadata = {
 };
 
 async function Editor({ id }: { id: string }) {
-  const invoice = await getInvoice(id);
-  return invoice ? <EditInvoiceEditor invoice={invoice} /> : <InvoiceNotFound />;
+  const [invoice, clients] = await Promise.all([getInvoice(id), listClients()]);
+  return invoice ? <EditInvoiceEditor invoice={invoice} clients={clients} /> : <InvoiceNotFound />;
 }
 
 export default function EditInvoicePage({ params }: PageProps<"/invoices/[id]/edit">) {

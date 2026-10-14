@@ -341,6 +341,7 @@ export function InvoiceDocument({ invoice, logo, signature }: InvoiceDocumentPro
           <View style={styles.billTo}>
             <Text style={styles.label}>Bill To:</Text>
             <Text style={styles.billToName}>{invoice.billTo}</Text>
+            {invoice.billToDetails.trim() && <Text>{invoice.billToDetails}</Text>}
           </View>
           <View style={styles.amounts}>
             <AmountRow label="Date:" value={amounts.date} valueWidth={valueWidth} />
