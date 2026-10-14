@@ -17,6 +17,7 @@ Semua perubahan penting pada proyek ini dicatat di file ini. Format mengikuti [K
 
 ### Fixed
 - Terms & Conditions di PDF tidak lagi melebar sampai kanan halaman. Baris panjang turun ke baris berikutnya (#17).
+- Error "Blocking Route: `Date.now()`" di mode development. Pengecekan sesi login kini hanya berjalan saat ada request (#21).
 
 ## [0.3.0] - 2026-10-12
 
