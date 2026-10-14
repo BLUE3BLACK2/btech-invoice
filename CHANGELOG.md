@@ -2,6 +2,22 @@
 
 Semua perubahan penting pada proyek ini dicatat di file ini. Format mengikuti [Keep a Changelog](https://keepachangelog.com/id-ID/1.1.0/) dan versi mengikuti [Semantic Versioning](https://semver.org/lang/id/).
 
+## [0.4.0] - 2026-10-14
+
+### Added
+- Invoice disimpan di PostgreSQL sehingga bisa dibuka bersama dari perangkat mana pun. Setiap invoice mendapat id yang bertambah otomatis (#18).
+- Nomor invoice baru terisi otomatis dari prefix invoice terakhir ditambah satu, misalnya `BTECH-CRM/AI-0001` lalu `BTECH-CRM/AI-0002`. Nomor duplikat ditolak (#18).
+- Banner di daftar invoice untuk memindahkan invoice lama dari browser ke database (#18).
+- Script `npm run db:migrate` untuk membuat dan memperbarui tabel database (#18).
+- Data klien Bill To tersimpan. Field Bill To menyarankan klien tersimpan dan mengisi detailnya otomatis (#19).
+- Field Bill To Details, yang tampil di bawah nama klien pada PDF (#19).
+
+### Changed
+- **Breaking:** aplikasi kini wajib punya `DATABASE_URL`. Invoice tidak lagi disimpan di `localStorage` (#18).
+
+### Fixed
+- Terms & Conditions di PDF tidak lagi melebar sampai kanan halaman. Baris panjang turun ke baris berikutnya (#17).
+
 ## [0.3.0] - 2026-10-12
 
 ### Added
