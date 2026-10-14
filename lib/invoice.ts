@@ -15,6 +15,7 @@ export type Invoice = {
   logo: string;
   companyName: string;
   billTo: string;
+  billToDetails: string;
   date: string;
   dueDate: string;
   currency: Currency;
@@ -24,6 +25,11 @@ export type Invoice = {
   terms: string;
   signature: string;
   signatory: string;
+};
+
+export type Client = {
+  name: string;
+  details: string;
 };
 
 export type InvoiceSummary = Pick<
@@ -153,6 +159,7 @@ export function createInvoice(defaults: InvoiceDefaults): Invoice {
     logo: DEFAULT_LOGO,
     companyName: DEFAULT_COMPANY_NAME,
     billTo: "",
+    billToDetails: "",
     date: today,
     dueDate: addDays(today, DEFAULT_DUE_DAYS),
     currency: DEFAULT_CURRENCY,
@@ -198,6 +205,7 @@ export function parseInvoice(input: unknown): Invoice | null {
     logo: text(invoice.logo) || DEFAULT_LOGO,
     companyName: text(invoice.companyName),
     billTo: text(invoice.billTo).trim(),
+    billToDetails: text(invoice.billToDetails).trim(),
     date,
     dueDate,
     currency: CURRENCIES.find((currency) => currency === invoice.currency) ?? DEFAULT_CURRENCY,

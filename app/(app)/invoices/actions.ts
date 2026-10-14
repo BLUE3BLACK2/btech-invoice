@@ -3,6 +3,7 @@
 import { refresh } from "next/cache";
 import { redirect } from "next/navigation";
 import { verifySession } from "@/lib/auth";
+import { saveClient } from "@/lib/client-store";
 import { isUniqueViolation } from "@/lib/db";
 import { parseInvoice, validateInvoice, type Invoice, type InvoiceErrors } from "@/lib/invoice";
 import { deleteInvoice, getInvoice, insertInvoice, updateInvoice } from "@/lib/invoice-store";
@@ -18,6 +19,7 @@ export async function saveInvoiceAction(input: Invoice): Promise<InvoiceErrors> 
 
   let id: number | null;
   try {
+    await saveClient({ name: invoice.billTo, details: invoice.billToDetails });
     id = invoice.id ? await updateInvoice(invoice) : await insertInvoice(invoice);
   } catch (error) {
     if (isUniqueViolation(error)) return DUPLICATE_NUMBER;
@@ -33,6 +35,7 @@ export async function importInvoiceAction(input: unknown) {
   if (!invoice || Object.keys(validateInvoice(invoice)).length > 0) return true;
   const createdAt = (input as { createdAt?: unknown }).createdAt;
   try {
+    await saveClient({ name: invoice.billTo, details: invoice.billToDetails });
     await insertInvoice(
       { ...invoice, id: 0 },
       typeof createdAt === "string" && !Number.isNaN(Date.parse(createdAt)) ? createdAt : undefined,

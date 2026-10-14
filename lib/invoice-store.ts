@@ -17,6 +17,7 @@ function invoiceRow(invoice: Invoice) {
     logo: invoice.logo,
     companyName: invoice.companyName,
     billTo: invoice.billTo,
+    billToDetails: invoice.billToDetails,
     date: invoice.date,
     dueDate: invoice.dueDate,
     currency: invoice.currency,
@@ -43,8 +44,8 @@ export async function getInvoice(id: string | number) {
   const invoiceId = parseId(id);
   if (!invoiceId) return null;
   const [invoice] = await sql<Invoice[]>`
-    SELECT id, number, logo, company_name, bill_to, date::text AS date, due_date::text AS due_date,
-      currency, items, tax_rate, notes, terms, signature, signatory
+    SELECT id, number, logo, company_name, bill_to, bill_to_details, date::text AS date,
+      due_date::text AS due_date, currency, items, tax_rate, notes, terms, signature, signatory
     FROM invoices
     WHERE id = ${invoiceId}
   `;
